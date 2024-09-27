@@ -2,13 +2,17 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\PostController;
 use App\Http\Controllers\DashboardController;
 
 
+// Home page
+Route::redirect('/','posts');
+
+Route::resource('posts',PostController::class);
 
 // Logged
 Route::middleware(['auth'])->group(function (){
-
   // Dashboard
     Route::get('/dashboard', [ DashboardController::class, 'index' ] )->name('dashboard');
     Route::post('/logout', [ AuthController::class, 'logout' ] )->name('logout');
@@ -17,8 +21,7 @@ Route::middleware(['auth'])->group(function (){
 // Guest
 Route::middleware(['guest'])->group(function (){
 
-    // Home page
-    Route::view('/','posts.index')->name('home');
+
 
     // Register
     Route::view('/register','auth.register')->name('register');

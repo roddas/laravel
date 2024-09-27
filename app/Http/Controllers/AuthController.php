@@ -21,7 +21,7 @@ class AuthController extends Controller
         $user = User::create($fields);
         Auth::login($user);
 
-        return redirect()->route('home');
+        return redirect()->route('posts.index');
     }
     public function login(Request $request){
         $fields = $request->validate(
@@ -32,11 +32,11 @@ class AuthController extends Controller
         );
 
         if(Auth::attempt($fields, $request->remember)){
-            return redirect()->route('home');
+            return redirect()->route('posts.index');
         }
         return back()->withErrors(['failed'=>'The provided credentials does not match']);
 
-        //return redirect()->route('home');
+        //return redirect()->route('posts.index');
     }
     public function logout(Request $request){
         Auth::logout();

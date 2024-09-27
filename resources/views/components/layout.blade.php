@@ -13,7 +13,7 @@
 <body class="bg-slate-100 text-slate-900">
     <header class="bg-slate-800 shadow-lg">
         <nav>
-            <a href="{{ route('home') }}" class="nav-link">HOME</a>
+            <a href="{{ route('posts.index') }}" class="nav-link">HOME</a>
 
             {{-- Guest user --}}
             @guest
