@@ -32,13 +32,13 @@ class PostController extends Controller
     {
         //
         $fields = $request->validate([
-            'title' =>['required','max:250'],
-            'body' => ['required']
+            'title' => ['required', 'max:250'],
+            'body' => ['required'],
         ]);
 
         // Post::create(['user_id' => Auth::id(),...$fields]);
         Auth::user()->posts()->create($fields);
-        return back()->with('success','Your post was created');
+        return back()->with('success', 'Your post was created');
     }
 
     /**
@@ -46,7 +46,7 @@ class PostController extends Controller
      */
     public function show(Post $post)
     {
-        //
+        return view('posts.show', ['post' => $post]);
     }
 
     /**
@@ -54,7 +54,7 @@ class PostController extends Controller
      */
     public function edit(Post $post)
     {
-        //
+        return view('posts.edit', ['post' => $post]);
     }
 
     /**
@@ -63,6 +63,12 @@ class PostController extends Controller
     public function update(Request $request, Post $post)
     {
         //
+        $fields = $request->validate([
+            'title' => ['required', 'max:250'],
+            'body' => ['required'],
+        ]);
+        $post->update($fields);
+        return redirect('dashboard')->with('success', 'Your post was updated');
     }
 
     /**
@@ -70,6 +76,7 @@ class PostController extends Controller
      */
     public function destroy(Post $post)
     {
-        //
+        $post->delete();
+        return back()->with('delete', 'Your post was deleted!');
     }
 }

@@ -41,8 +41,6 @@
                     </div>
                 </div>
             @endauth
-
-
         </nav>
     </header>
     <main class="py-8 px-4 mx-auto max-w-screen-lg">
