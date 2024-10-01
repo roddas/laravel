@@ -12,7 +12,6 @@ use Illuminate\Support\Facades\Storage;
 
 define('DEFAULT_IMAGE', 'posts_images/default.webp');
 
-
 class PostController extends Controller
 {
     /**
@@ -20,7 +19,6 @@ class PostController extends Controller
      */
     public function index()
     {
-        Mail::to('roddas360@gmail.com')->send(new WelcomeMail());
         $post = Post::latest()->paginate(6);
         return view('posts.index', ['posts' => $post]);
     }
@@ -49,13 +47,16 @@ class PostController extends Controller
             $path = Storage::disk('public')->put('posts_images', $request->image);
         }
 
-        Auth::user()
+        $post = Auth::user()
             ->posts()
             ->create([
                 'title' => $request->title,
                 'body' => $request->body,
                 'image' => $path,
             ]);
+
+        Mail::to('roddas360@gmail.com')->send(new WelcomeMail(Auth::user(), $post));
+
         return back()->with('success', 'Your post was created');
     }
 
@@ -84,9 +85,8 @@ class PostController extends Controller
         Gate::authorize('modify', $post);
         $fields = $request->validate([
             'title' => ['required', 'max:250'],
-            'body' => ['required'],'image' => ['nullable', 'file', 'max:2000', 'mimes:png,jpg,webp'],
-
-        
+            'body' => ['required'],
+            'image' => ['nullable', 'file', 'max:2000', 'mimes:png,jpg,webp'],
         ]);
 
         $request->validate([
@@ -94,10 +94,10 @@ class PostController extends Controller
             'body' => ['required'],
             'image' => ['nullable', 'file', 'max:2000', 'mimes:png,jpg,webp'],
         ]);
-        
+
         $path = $post->image ?? DEFAULT_IMAGE;
         if ($request->hasFile('image')) {
-            if($post->image != DEFAULT_IMAGE){
+            if ($post->image != DEFAULT_IMAGE) {
                 Storage::disk('public')->delete($post->image);
             }
             $path = Storage::disk('public')->put('posts_images', $request->image);
@@ -117,7 +117,7 @@ class PostController extends Controller
     public function destroy(Post $post)
     {
         Gate::authorize('modify', $post);
-        if($post->image and $post->image != DEFAULT_IMAGE){
+        if ($post->image and $post->image != DEFAULT_IMAGE) {
             Storage::disk('public')->delete($post->image);
         }
         $post->delete();
