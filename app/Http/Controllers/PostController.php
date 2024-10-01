@@ -2,10 +2,16 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\WelcomeMail;
 use App\Models\Post;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Storage;
+
+define('DEFAULT_IMAGE', 'posts_images/default.webp');
+
 
 class PostController extends Controller
 {
@@ -14,10 +20,10 @@ class PostController extends Controller
      */
     public function index()
     {
+        Mail::to('roddas360@gmail.com')->send(new WelcomeMail());
         $post = Post::latest()->paginate(6);
         return view('posts.index', ['posts' => $post]);
     }
-
     /**
      * Show the form for creating a new resource.
      */
@@ -31,14 +37,25 @@ class PostController extends Controller
      */
     public function store(Request $request)
     {
-        //
-        $fields = $request->validate([
+        // Storage::put('posts_images',$request->image);
+
+        $request->validate([
             'title' => ['required', 'max:250'],
             'body' => ['required'],
+            'image' => ['nullable', 'file', 'max:2000', 'mimes:png,jpg,webp'],
         ]);
+        $path = 'posts_images/default.webp';
+        if ($request->hasFile('image')) {
+            $path = Storage::disk('public')->put('posts_images', $request->image);
+        }
 
-        // Post::create(['user_id' => Auth::id(),...$fields]);
-        Auth::user()->posts()->create($fields);
+        Auth::user()
+            ->posts()
+            ->create([
+                'title' => $request->title,
+                'body' => $request->body,
+                'image' => $path,
+            ]);
         return back()->with('success', 'Your post was created');
     }
 
@@ -55,7 +72,7 @@ class PostController extends Controller
      */
     public function edit(Post $post)
     {
-        Gate::authorize('modify',$post);
+        Gate::authorize('modify', $post);
         return view('posts.edit', ['post' => $post]);
     }
 
@@ -67,9 +84,30 @@ class PostController extends Controller
         Gate::authorize('modify', $post);
         $fields = $request->validate([
             'title' => ['required', 'max:250'],
-            'body' => ['required'],
+            'body' => ['required'],'image' => ['nullable', 'file', 'max:2000', 'mimes:png,jpg,webp'],
+
+        
         ]);
-        $post->update($fields);
+
+        $request->validate([
+            'title' => ['required', 'max:250'],
+            'body' => ['required'],
+            'image' => ['nullable', 'file', 'max:2000', 'mimes:png,jpg,webp'],
+        ]);
+        
+        $path = $post->image ?? DEFAULT_IMAGE;
+        if ($request->hasFile('image')) {
+            if($post->image != DEFAULT_IMAGE){
+                Storage::disk('public')->delete($post->image);
+            }
+            $path = Storage::disk('public')->put('posts_images', $request->image);
+        }
+
+        $post->update([
+            'title' => $request->title,
+            'body' => $request->body,
+            'image' => $path,
+        ]);
         return redirect('dashboard')->with('success', 'Your post was updated');
     }
 
@@ -78,8 +116,10 @@ class PostController extends Controller
      */
     public function destroy(Post $post)
     {
-
         Gate::authorize('modify', $post);
+        if($post->image and $post->image != DEFAULT_IMAGE){
+            Storage::disk('public')->delete($post->image);
+        }
         $post->delete();
         return back()->with('delete', 'Your post was deleted!');
     }
